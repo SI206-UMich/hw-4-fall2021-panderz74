@@ -1,3 +1,7 @@
+#Anders Lundin
+#63526760
+#worked with Ryan Horlick 
+
 
 import unittest
 
@@ -28,13 +32,14 @@ class Customer:
     # Submit_order takes a cashier, a stall and an amount as parameters, 
     # it deducts the amount from the customer’s wallet and calls the receive_payment method on the cashier object
     def submit_order(self, cashier, stall, amount): 
-        pass
+        self.wallet -= amount
+        cashier.receive_payment(stall, amount)
 
     # The __str__ method prints the customer's information.    
     def __str__(self):
         return "Hello! My name is " + self.name + ". I have $" + str(self.wallet) + " in my payment card."
 
-
+            
 # The Cashier class
 # The Cashier class represents a cashier at the market. 
 class Cashier:
@@ -71,8 +76,38 @@ class Cashier:
 
 ## Complete the Stall class here following the instructions in HW_4_instructions_rubric
 class Stall:
+    def __init__(self, name, inventory, cost = 7, earnings = 0):
+        self.name = name
+        self.inventory = inventory
+        self.cost = cost
+        self.earnings = earnings
     
-    pass
+    def process_order(self, name, quantity):
+        if self.has_item(name, quantity):
+            self.inventory[name] -= quantity
+        else:
+            return "sorry, we do not have enough" + str(self.name) + "s to complete your order."
+    
+    def has_item(self, name, quantity):
+        if name not in self.inventory.keys():
+            return False
+        if self.inventory[name] >= quantity:
+            return True
+        else:
+            return False
+    
+    def stock_up(self, name, quantity):
+        if self.inventory[name] != 0:
+            self.inventory[name] += quantity
+        else:
+            self.inventory[name] = quantity
+
+    def compute_cost(self, quantity):
+        total = self.cost * quantity
+        return total
+            
+    def __str__(self):
+        print("Hello, we are " + self.name + ". This is the current menu " + self.inventory.keys() + ". \n" + "We charge $" + self.cost + " per item. We have $" + self.earnings + "in total.")
 
 
 class TestAllMethods(unittest.TestCase):
@@ -147,52 +182,87 @@ class TestAllMethods(unittest.TestCase):
     def test_compute_cost(self):
         #what's wrong with the following statements?
         #can you correct them?
-        self.assertEqual(self.s1.compute_cost(self.s1,5), 51)
-        self.assertEqual(self.s3.compute_cost(self.s3,6), 45)
+        self.assertEqual(self.s1.compute_cost(5), 50)
+        self.assertEqual(self.s3.compute_cost(6), 42)
 
 	# Check that the stall can properly see when it is empty
     def test_has_item(self):
         # Set up to run test cases
-
+        
         # Test to see if has_item returns True when a stall has enough items left
+
         # Please follow the instructions below to create three different kinds of test cases 
         # Test case 1: the stall does not have this food item: 
-        
+        self.assertFalse(self.s1.has_item("Enchilada", 4))
         # Test case 2: the stall does not have enough food item: 
-        
+        self.assertFalse(self.s1.has_item("Burger", 50))
         # Test case 3: the stall has the food item of the certain quantity: 
-        pass
+        self.assertTrue(self.s1.has_item("Burger", 4))
 
 	# Test validate order
     def test_validate_order(self):
 		# case 1: test if a customer doesn't have enough money in their wallet to order
-
+        self.assertEqual(self.f1.validate_order(self.c1, self.s1, "Burger", 30), None)
 		# case 2: test if the stall doesn't have enough food left in stock
-
+        self.assertEqual(self.f2.validate_order(self.c1, self.s1, "Burger", 200), None)
 		# case 3: check if the cashier can order item from that stall
-        pass
+        self.assertEqual(self.f1.validate_order(self.c2, self.s3, "Burger", 30), None)
 
     # Test if a customer can add money to their wallet
     def test_reload_money(self):
-        pass
+        self.assertEqual(self.f2.wallet, 150)
+        self.f2.reload_money(50)
+        self.assertEqual(self.f2.wallet, 200)
     
 ### Write main function
 def main():
     #Create different objects 
+    inv1 = {"Burger": 45, "French Fry": 50, "Soda": 20}
+    inv2 = {"Taco": 30, "Burrito": 19, "Enchilada": 20}
+    inv3 = {"Pepperoni": 20, "Sausage": 15}
+    cust1 = Customer("Juan", 200)
+    cust2 = Customer("Ryan", 100)
+    cust3 = Customer("Judah", 300)
+    stall1 = Stall("MrBeastBurger", inv1, cost = 11)
+    stall2 = Stall("Taco Emporium", inv2, cost = 10)
+    stall3 = Stall("PizzaLand", inv3, cost = 8)
+    cash1 = Cashier("Jakob")
+    cash2 = Cashier("Thomas")
+    
+    for c in [cash1, cash2]:
+            for s in [stall1, stall2]:
+                c.add_stall(s)
+                
 
-    #Try all cases in the validate_order function
     #Below you need to have *each customer instance* try the four cases
+   
     #case 1: the cashier does not have the stall 
+    cust1.validate_order(cash1, stall3, "Taco", 4)
+    cust2.validate_order(cash2, stall3, "Enchilada", 9)
+    cust3.validate_order(cash1, stall3, "Burrito", 12)
     
     #case 2: the casher has the stall, but not enough ordered food or the ordered food item
-    
-    #case 3: the customer does not have enough money to pay for the order: 
-    
-    #case 4: the customer successfully places an order
+    cust1.validate_order(cash1, stall1, "Soda", 21)
+    cust2.validate_order(cash2, stall1, "French Fry", 57)
+    cust3.validate_order(cash2, stall2, "Taco", 32)
 
-    pass
+    #case 3: the customer does not have enough money to pay for the order: 
+    cust1.validate_order(cash1, stall1, "French Fry", 45)
+    cust2.validate_order(cash1, stall1, "Burger", 12)
+    cust3.validate_order(cash2, stall2, "Taco", 29)
+
+    #case 4: the customer successfully places an order
+    cust1.validate_order(cash2, stall2, "Burrito", 4)
+    cust2.validate_order(cash1, stall1, "Burger", 3)
+    cust3.validate_order(cash2, stall2, "Enchilada", 2)
 
 if __name__ == "__main__":
 	main()
 	print("\n")
 	unittest.main(verbosity = 2)
+
+
+# def lucky_customer(self, list):
+#         counter = 0
+#         choice = random.randrange(list[0], list[len(list)], 10)
+#         for customer in list:
