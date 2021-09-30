@@ -264,6 +264,9 @@ if __name__ == "__main__":
 
 # def lucky_customer(self, list):
 #         counter = 0
-#         newlist = []
+#         count2=0.7
+#         #getting the list
 #         choice = random.randrange(list[0], list[len(list)], 10)
+#         list 
+#         list
 #         for customer in list:
